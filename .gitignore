@@ -4,8 +4,7 @@ build/
 *.egg-info
 
 # Keys
-lichs/key
-lichs/key.txt
+lichs/openai.key
 lichs/token.key
 
 # Others

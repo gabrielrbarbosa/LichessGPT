@@ -1,8 +1,11 @@
 import threading
 import datetime
+import time
 import chess
-
+import openai
+import re
 import os
+from pathlib import Path
 
 chess_board = chess.Board()
 runOnce = True
@@ -19,29 +22,32 @@ class Game(threading.Thread):
         self.color = color
         self.clock = {'white': datetime.datetime(1970, 1, 1, 0, time, 0), 'black': datetime.datetime(1970, 1, 1, 0, time, 0)}
         self.first_move = 2 # returns false after 2 moves have been made
+        self.canMove = True
+
+        openai_file = Path(__file__).parent.absolute() / "openai.key"
+        openai.api_key = openai_file.read_text()
         if self.isWhite:
             self.white_first_move()
 
 
     def run(self):
         for event in self.stream:
-            if event['type'] == "gameFull":
-                self.handle_game_full(event)
-            elif event['type'] == 'gameState':
+            if event['type'] == 'gameState':
                 self.handle_state_change(event)
-            elif event['type'] == 'chatLine':
-                self.handle_chat_line(event)
 
     def handle_state_change(self, game_state):
-
         global chess_board
 
+        self.canMove = True
+
         if game_state.get(self.color[0].lower() + "draw") is True:
-            self.handle_draw_state(game_state)
+            print('DRAW!')
+            self.canMove = False
+            os._exit(0)
         elif game_state["status"] == "resign":
             print("The opponent resigned. Congrats!")
+            self.canMove = False
             os._exit(0)
-
         else:
             # update time
             self.clock['white'] = game_state['wtime']
@@ -49,12 +55,13 @@ class Game(threading.Thread):
 
             # there's no "amount of turns" variable in the JSON, so we have to construct one manually
             turn = len(game_state["moves"].split())-1
-            if turn%2 == self.isWhite:
+            if turn % 2 == self.isWhite:
 
-                print(self.color + " moved.")
+                last_move = game_state["moves"].split()[-1]
+                print(self.color + " moved: " + last_move)
                 print()
 
-                chess_board.push_uci(game_state["moves"].split()[-1])
+                chess_board.push_uci(last_move)
                 self.display_board()
                 print()
 
@@ -66,55 +73,45 @@ class Game(threading.Thread):
 
                 # user move start time
                 move_start = datetime.datetime.now()
-
-                while(True):
+            
+                while(self.canMove):
                     try:
-                        move = input("Make your move: ")
-                        if move.lower() == "resign":
-                            self.board.resign_game(self.game_id)
-                            print("You resigned the game!")
-                            print("Thanks for playing!")
-                            os._exit(0)
+                        #move = input("Make your move: ")
+                        playerColor = 'white' if self.isWhite else 'black'
+                        prompt = 'Given the current chess game: ' + game_state["moves"] + \
+                                    ' output in one word the best next move for ' + playerColor + ' in SAN notation'
+                        
+                        completion = openai.Completion.create(engine='text-davinci-002', prompt=prompt, temperature=0.5)
+                        move = re.sub(r'\W+', '', completion.choices[0].text.strip())
+                        print('ChatGPT move: %s' % move)
+                        time.sleep(3)
+
+                        self.board.make_move(self.game_id, chess_board.parse_san(move))
+                        chess_board.push_san(move)
+                        if self.first_move:
+                            self.first_move -= 1
+                        elif self.color[0] == 'b':
+                            self.clock['white'] -= datetime.datetime.now() - move_start
                         else:
-                            self.board.make_move(self.game_id, chess_board.parse_san(move))
-                            chess_board.push_san(move)
-                            if self.first_move:
-                                self.first_move -= 1
-                            elif self.color[0] == 'b':
-                                self.clock['white'] -= datetime.datetime.now() - move_start
-                            else:
-                                self.clock['black'] -= datetime.datetime.now() - move_start
+                            self.clock['black'] -= datetime.datetime.now() - move_start
+                        break    
                     except Exception as e:
-                        print("You can't make that move. Try again!")
-                        print(f"Reason: {e}") 
+                        print(f"Error: {e}")
                         continue
-                    break
 
                 self.display_board()
                 self.check_mate(chess_board)
                 print()
                 print(self.color + "'s turn...")
 
-    def handle_game_full(self, gamefull):
-        # TODO Write this method
-        pass
-
-    def handle_draw_state(self, game_state):
-        # TODO Write this method
-        pass
-
-    def handle_chat_line(self, event):
-        # TODO Write this method
-        pass
-
     def white_first_move(self):
-
         global chess_board
 
         self.display_board()
         while(True):
             try:
-                move = input("Make your move: ")
+                #move = input("Make your move: ")
+                move = "d4"
                 if move.lower() == "resign":
                     self.board.resign_game(self.game_id)
                     os._exit(0)
@@ -152,14 +149,21 @@ class Game(threading.Thread):
     def display_board(self):
         global chess_board
 
-        # display the chess board, if the the player's color is black then flip the board 
-        if self.isWhite:
-            print(chess_board)
-        else:
-            print(chess_board.transform(chess.flip_vertical).transform(chess.flip_horizontal))
+        m = {'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔',
+             'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚',
+             '.': '·', ' ': ' '}
 
-        # print clock
+        # Replace each piece in the board representation with its Unicode equivalent
+
+        # Display the chess board, if the the player's color is black then flip the board 
+        if not self.isWhite:
+            chess_board = chess_board.transform(chess.flip_vertical).transform(chess.flip_horizontal)
+
+        board_str = str(chess_board)
+        for piece, char in m.items():
+            board_str = board_str.replace(piece, char)
+
+        print(board_str)
         print("[%02d:%02d : %02d:%02d]" % (self.clock['white'].minute, self.clock['white'].second, 
                                            self.clock['black'].minute, self.clock['black'].second))
         print()
-

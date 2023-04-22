@@ -3,34 +3,19 @@
 <h1 align="center">
   <img height="200" src="docs/images/logo.png">
   <br>
-  Lichs (Lichess in the Terminal)
+  Lichess GPT (Lichess in the Terminal)
 </h1>
 
-<p align="center">
-  <a href="https://github.com/Cqsi/lichs">
-    <img src="https://img.shields.io/badge/project-semi--active-orange" alt="project-active" />
-  </a>
-  <a href="https://github.com/Cqsi/lichs">
-    <img src="https://img.shields.io/badge/Contributions-welcome-brightgreen" alt="contributions-welcome" />
-  </a>
-  <a href="https://github.com/Cqsi/lichs/blob/master/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="license-mit" />
-  </a>
-  <a href="https://pypi.org/project/lichs/">
-    <img src="https://img.shields.io/pypi/v/lichs" alt="pypi-version" />
-  </a>
-</p>
-
-## NOTE!
-This project has not been updated in over a year. Feel free to check out the code, however there could be multiple errors upon running it. 
+## Example
+This experiment aims to demonstrate current state of GPT models playing chess.
+In this first release it's suggesting 90% of invalid moves and the other 10% are blunders.
+<iframe src="https://lichess.org/embed/game/I2YUGRgY?theme=auto&bg=auto#9"
+width=600 height=400 frameborder=0></iframe>
 
 ## Info and requirements
-* Uses [Lichess](https://lichess.org/), which means that you need to have a Lichess account
+* [Lichess](https://lichess.org/), which means that you need to have a Lichess account
 * Only Classical and Rapid games because the Lichess API doesn't allow anything else
 * This program uses [SAN](https://en.wikipedia.org/wiki/Algebraic_notation_(chess))-notation, see the [Important](#Important)-section.
-
-Lichs uses the Lichess API (more exactly [berserk](https://github.com/rhgrant10/berserk)) to make it possible for you to play against other real players directly in the terminal on Lichess servers. If you like this project, be sure to also check out [Nick Zuber's Chs-project](https://github.com/nickzuber/chs), since it was his project that inspired me to do this in the first place.
-
 
 ## Installation
 
@@ -46,7 +31,8 @@ and the program will be installed. The next step is to generate a personal API-k
 1. [Create a Lichess API token](https://lichess.org/account/oauth/token/create?scopes[]=board:play&description=Lichs+cli+play), log into Lichess if necessary
 2. Click the button `Submit` in the lower right corner
 3. Copy the token shown in the brown box
-4. Jump into your terminal and write `lichs <api_token>` (put your API token instead of `<api_token>`) and run the command. To get this clear, an example would have been `lichs lzRceo5XOUND74Lm`. You should then see a message to confirm that the API token has been saved. 
+4. Jump into your terminal and write `lichs <api_token>` (put your API token instead of `<api_token>`) and run the command. To get this clear, an example would have been `lichs lzRceo5XOUND74Lm`. You should then see a message to confirm that the API token has been saved.
+5. Set up your OpenAI [API Keys](https://platform.openai.com/account/api-keys), create a file in lichs directory named "openai.key" and save it. Quite expensive to run, so set and monitor your API key limits with OpenAI!
 
 
 ## Usage
@@ -55,7 +41,7 @@ and the program will be installed. The next step is to generate a personal API-k
   <img src="docs/images/carbon.png">
 </h1>
 
-You start playing by typing the command `lichs` into your terminal:
+You start playing by typing the command into your terminal:
 
 ```
 $ lichs
