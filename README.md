@@ -8,9 +8,11 @@
 
 ## Example
 This experiment aims to demonstrate current state of GPT models playing chess.
-In this first release it's suggesting 90% of invalid moves and the other 10% are blunders.
-<iframe src="https://lichess.org/embed/game/I2YUGRgY?theme=auto&bg=auto#9"
-width=600 height=400 frameborder=0></iframe>
+In this first release it's suggesting 90% invalid moves and the other 10% are mostly blunders, as seen in the game below.
+
+<p align="center">
+  <img src="https://lichess1.org/game/export/gif/white/I2YUGRgY.gif?theme=maple&piece=cburnett" alt="MagnusGPT Game" />
+</p>
 
 ## Info and requirements
 * [Lichess](https://lichess.org/), which means that you need to have a Lichess account
@@ -50,7 +52,7 @@ $ lichs
 That will take you to the intro screen:
 
 ```
-Welcome to Lichess!
+Welcome to LichessGPT!
 
 What kind of chess do you want to play?
 1. Rapid (10+0)
